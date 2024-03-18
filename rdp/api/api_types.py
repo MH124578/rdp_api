@@ -11,6 +11,7 @@ class ValueNoID(BaseModel):
     value_type_id: int
     time: int
     value: float 
+    device_id: int
 
 class Value(ValueNoID):
     id: int
@@ -19,3 +20,10 @@ class ApiDescription(BaseModel):
     description : str = "This is the Api"
     value_type_link : str = "/type"
     value_link : str = "/value"
+
+class DeviceNoID(BaseModel):
+    name: str
+    description: str
+
+class Device(DeviceNoID):
+    id: int
