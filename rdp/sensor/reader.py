@@ -16,9 +16,9 @@ class Reader:
         self._thread: threading.Thread = None
 
     def start(self) -> None:
-        self._crud.add_device("dev1","test 1")
-        self._crud.add_device("dev2","test 2")
-        self._crud.add_device("dev3","test 3")
+        self._crud.add_device("dev1","test 1",1)
+        self._crud.add_device("dev2","test 2",2)
+        self._crud.add_device("dev3","test 3",3)
 
         self._thread = threading.Thread(target=self._run)
         self._thread.start()

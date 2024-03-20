@@ -25,16 +25,29 @@ class ValueType(Base):
         return f"ValueType(id={self.id!r}, value_type={self.type_name})"
 
 
+class Location(Base):
+    __tablename__ = "location"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column()
+
+    devices: Mapped[List["Device"]] = relationship("Device", back_populates="location")
+
+    def __repr__(self) -> str:
+        return f"Location(id={self.id!r}, name={self.name!r})"
+
 class Device(Base):
     __tablename__ = "device"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column()
+    location_id: Mapped[int] = mapped_column(ForeignKey("location.id"))
 
     values: Mapped[List["Value"]] = relationship("Value", back_populates="device")
+    location: Mapped["Location"] = relationship("Location", back_populates="devices")
 
     def __repr__(self) -> str:
-        return f"Device(id={self.id!r}, name={self.name!r}, description={self.description!r})"
+        return f"Device(id={self.id!r}, name={self.name!r}, description={self.description!r}, location_id={self.location_id!r})"
+
 
 class Value(Base):
     __tablename__ = "value"

@@ -13,6 +13,7 @@ class ValueNoID(BaseModel):
     value: float 
     device_id: int
 
+
 class Value(ValueNoID):
     id: int
 
@@ -24,6 +25,13 @@ class ApiDescription(BaseModel):
 class DeviceNoID(BaseModel):
     name: str
     description: str
+    location_id: int
 
 class Device(DeviceNoID):
+    id: int
+
+class LocationNoID(BaseModel):
+    name: str
+
+class Location(LocationNoID):
     id: int

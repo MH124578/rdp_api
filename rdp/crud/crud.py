@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import Session
 
-from .model import Base, Value, ValueType, Device
+from .model import Base, Value, ValueType, Device, Location
 
 
 class Crud:
@@ -123,7 +123,7 @@ class Crud:
 
             return session.scalars(stmt).all()
 
-    def add_device(self, name: str, description: str) -> Device:
+    def add_device(self, name: str, description: str, location_id: int) -> Device:
         """Add a new device to the database.
 
         Args:
@@ -134,18 +134,19 @@ class Crud:
             Device: The newly created Device object.
         """
         with Session(self._engine) as session:
-            new_device = Device(name=name, description=description)
+            new_device = Device(name=name, description=description, location_id=location_id)
             session.add(new_device)
             try:
                 session.commit()
                 device_id = new_device.id  
-                device_name = new_device.name  
-                device_description = new_device.description  
+                device_name = new_device.name
+                device_description = new_device.description
+                device_location_id = new_device.location_id 
             except IntegrityError:
                 logging.error("IntegrityError while adding a new device.")
                 session.rollback()
                 raise
-            return Device(id=device_id, name=device_name, description=device_description)
+            return Device(id=device_id, name=device_name, description=device_description, location_id=device_location_id)
 
     def get_devices(self) -> List[Device]:
         """Retrieve all devices from the database."""
@@ -163,5 +164,46 @@ class Crud:
                 stmt = select(Value).where(Value.device_id == device.id)
             else:
                 raise ValueError("Either device_id or device_name must be provided")
+            
+            return session.scalars(stmt).all()
+
+    def add_location(self, name: str) -> Location:
+        """Add a new location to the database.
+
+        Args:
+            name (str): The name of the location.
+
+        Returns:
+            Location: The newly created Location object.
+        """
+        with Session(self._engine) as session:
+            new_location = Location(name=name)
+            session.add(new_location)
+            try:
+                session.commit()
+                location_id = new_location.id  
+                location_name = new_location.name   
+            except IntegrityError:
+                logging.error("IntegrityError while adding a new location.")
+                session.rollback()
+                raise
+            return Location(id=location_id, name=location_name)
+
+    def get_location(self) -> List[Location]:
+        """Retrieve all locations from the database."""
+        with Session(self._engine) as session:
+            return session.query(Location).all()
+
+    def get_devices_by_location(self, location_id: Optional[int] = None, location_name: Optional[str] = None) -> List[Device]:
+        with Session(self._engine) as session:
+            if location_id is not None:
+                stmt = select(Device).where(Device.location_id == location_id)
+            elif location_name is not None:
+                location = session.query(Location).filter(Location.name == location_name).first()
+                if location is None:
+                    raise self.NoResultFound("Location not found")
+                stmt = select(Device).where(Device.location_id == location.id)
+            else:
+                raise ValueError("Either location_id or location_name must be provided")
             
             return session.scalars(stmt).all()

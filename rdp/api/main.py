@@ -104,8 +104,8 @@ def create_device(device_data: ApiTypes.DeviceNoID) -> ApiTypes.Device:
     """
     global crud
     try:
-        new_device = crud.add_device(name=device_data.name, description=device_data.description)
-        return ApiTypes.Device(id=new_device.id, name=new_device.name, description=new_device.description)
+        new_device = crud.add_device(name=device_data.name, description=device_data.description, location_id=device_data.location_id)
+        return ApiTypes.Device(id=new_device.id, name=new_device.name, description=new_device.description, location_id=new_device.location_id)
     except crud.IntegrityError as e:
         logger.error(f"Failed to create a new device: {e}")
         raise HTTPException(status_code=400, detail="Failed to create a new device due to a database error.")
@@ -125,6 +125,41 @@ def read_values_by_device(device_id: Optional[int] = None, device_name: Optional
         raise HTTPException(status_code=404, detail="Device not found or no values for this device")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/create_location/", response_model=ApiTypes.Location)
+def create_location(location_data: ApiTypes.LocationNoID) -> ApiTypes.Location:
+    """Create a new location with the given name.
+
+    Args:
+        device_data (ApiTypes.LocationCreate): The name of the new location.
+
+    Returns:
+        ApiTypes.Location: The created location with its ID, name.
+    """
+    global crud
+    try:
+        new_location = crud.add_location(name=location_data.name)
+        return ApiTypes.Location(id=new_location.id, name=new_location.name)
+    except crud.IntegrityError as e:
+        logger.error(f"Failed to create a new location: {e}")
+        raise HTTPException(status_code=400, detail="Failed to create a new location due to a database error.")
+
+@app.get("/get_location/")
+def get_location():
+    return crud.get_location()
+
+@app.get("/get_device/by_location_id_or_name/", response_model=List[ApiTypes.Device])
+def read_device_by_location(location_id: Optional[int] = None, location_name: Optional[str] = None):
+    if location_id is None and location_name is None:
+        raise HTTPException(status_code=400, detail="Either location_id or location_name must be provided")
+    try:
+        device = crud.get_devices_by_location(location_id=location_id, location_name=location_name)
+        return device
+    except crud.NoResultFound:
+        raise HTTPException(status_code=404, detail="Location not found or no devices for this location")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.on_event("startup")
 async def startup_event() -> None:
